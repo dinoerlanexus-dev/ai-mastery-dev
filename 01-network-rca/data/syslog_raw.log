@@ -1,0 +1,25 @@
+Aug 18 09:10:01 BR-JKT-03 %SYS-5-CONFIG_I: Configured from console by admin on vty0
+Aug 18 09:10:12 BR-JKT-03 %SEC_LOGIN-5-LOGIN_SUCCESS: Login Success user admin from 10.1.1.5
+Aug 18 09:10:30 BR-JKT-03 %NTP-6-PEERSYNC: NTP synced to peer 10.1.1.1
+Aug 18 09:11:00 BR-JKT-03 %SNMP-5-WARMSTART: SNMP agent warm start
+Aug 18 09:12:14 BR-JKT-03 %SYS-6-LOGGINGHOST_STARTSTOP: Logging to host 10.1.1.9 started
+Aug 18 09:13:05 BR-JKT-03 %DHCPD-4-PING_CONFLICT: DHCP address conflict resolved
+Aug 18 09:13:44 BR-JKT-03 %PARSER-5-CFGLOG_LOGGEDCMD: User admin logged command
+Aug 18 09:14:02 BR-JKT-03 %LINK-3-UPDOWN: Interface GigabitEthernet0/1, changed state to down
+Aug 18 09:14:05 BR-JKT-03 %BGP-5-ADJCHANGE: neighbor 10.20.30.1 Down Interface flap
+Aug 18 09:14:20 BR-JKT-03 %SYS-6-CLOCKUPDATE: System clock updated
+Aug 18 09:14:40 BR-JKT-03 %LINK-3-UPDOWN: Interface GigabitEthernet0/1, changed state to up
+Aug 18 09:14:43 BR-JKT-03 %BGP-5-ADJCHANGE: neighbor 10.20.30.1 Up
+Aug 18 09:15:10 BR-JKT-03 %SEC_LOGIN-5-LOGIN_SUCCESS: Login Success user noc from 10.1.1.7
+Aug 18 09:15:55 BR-JKT-03 %NTP-6-PEERSYNC: NTP synced to peer 10.1.1.1
+Aug 18 09:16:22 BR-JKT-03 %BGP-3-NOTIFICATION: received from neighbor 10.20.30.1 4/0 (hold time expired) 0 bytes
+Aug 18 09:16:22 BR-JKT-03 %BGP-5-ADJCHANGE: neighbor 10.20.30.1 Down BGP Notification received
+Aug 18 09:16:40 BR-JKT-03 %SYS-5-CONFIG_I: Configured from console by admin on vty0
+Aug 18 09:16:58 BR-JKT-03 %BGP-5-ADJCHANGE: neighbor 10.20.30.1 Up
+Aug 18 09:17:30 BR-JKT-03 %SNMP-5-LINK_UPDOWN: SNMP trap sent
+Aug 18 09:18:15 BR-JKT-03 %BGP-5-ADJCHANGE: neighbor 10.20.30.1 Down Interface flap
+Aug 18 09:18:20 BR-JKT-03 %OSPF-5-ADJCHG: Process 1, Nbr 10.20.30.1 on Gi0/1 from FULL to DOWN
+Aug 18 09:19:05 BR-JKT-03 %CONTROLLER-4-INPUT_ERRORS: GigabitEthernet0/1 CRC errors incrementing (1243 in last 60s)
+Aug 18 09:19:30 BR-JKT-03 %SYS-6-LOGGINGHOST_STARTSTOP: Logging to host 10.1.1.9 running
+Aug 18 09:20:00 BR-JKT-03 %NTP-6-PEERSYNC: NTP synced to peer 10.1.1.1
+Aug 18 09:20:45 BR-JKT-03 %SEC_LOGIN-5-LOGIN_SUCCESS: Login Success user admin from 10.1.1.5

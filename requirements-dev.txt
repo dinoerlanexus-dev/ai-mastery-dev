@@ -1,0 +1,3 @@
+# Dev/CI only — runtime deps + test runner
+-r requirements.txt
+pytest==8.4.2

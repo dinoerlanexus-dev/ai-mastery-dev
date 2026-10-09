@@ -1,0 +1,8 @@
+# ai-mastery-dev — runtime dependencies (SHARED venv untuk semua usecase)
+# Versi di-pin = versi yang ada di venv lokal Dili (Python 3.9.6), 24 Sep 2026.
+# Upgrade = sengaja: ganti versi di sini, test lokal, baru push.
+
+google-genai==1.47.0      # Gemini SDK — 01/02/03/04 (from google import genai)
+chromadb==1.5.9           # vector store — 02 config_review_rag, 04 ojk-rag
+pypdf==6.16.1             # PDF reader — 04 ojk-rag/ingest.py
+streamlit==1.50.0         # dashboard_app.py (root)

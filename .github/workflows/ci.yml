@@ -1,0 +1,103 @@
+# ai-mastery-dev CI — v2 (4 usecase, matrix: 1 job per usecase, jalan paralel)
+# Flow: push -> test -> package deliverables -> upload Drive
+# Rules (design doc, 16-17 Sep 2026):
+#   - CI TIDAK PERNAH manggil Gemini API. Test pakai parser real + mock ask_ai().
+#   - Backup = deliverables only (bukan zip repo). Git = source of truth kode.
+#   - Upload Drive jalan HANYA kalau secret RCLONE_CONF udah ada -> sebelum setup,
+#     pipeline tetap hijau (test + package), step Drive di-skip.
+
+name: ci
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "01-network-rca/**"
+      - "02-config-review/**"
+      - "03-sla-analyzer/**"
+      - "04-ojk-rag/**"
+      - "requirements*.txt"
+      - ".github/workflows/ci.yml"
+  workflow_dispatch: {}      # tombol "Run workflow" manual di tab Actions
+
+permissions:
+  contents: read
+
+jobs:
+  usecase:
+    name: ${{ matrix.usecase }} — test, package, backup
+    runs-on: ubuntu-24.04      # di-pin (bukan "latest") biar OS gak ganti diam-diam
+    strategy:
+      fail-fast: false          # 1 usecase merah gak nge-cancel yang lain
+      matrix:
+        include:
+          - { usecase: 01-network-rca,   test: test_rca.py }
+          - { usecase: 02-config-review, test: test_config_review.py }
+          - { usecase: 03-sla-analyzer,  test: test_sla_analyzer.py }
+          - { usecase: 04-ojk-rag,       test: test_ojk_rag.py }
+    env:
+      USECASE: ${{ matrix.usecase }}
+      DRIVE_ROOT: AI-Mastery-Deliverables
+      RCLONE_CONF: ${{ secrets.RCLONE_CONF }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.9 (samain sama venv lokal)
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.9"
+          cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            requirements-dev.txt
+
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt
+
+      - name: Smoke test (no API key, mock only)
+        working-directory: ${{ env.USECASE }}
+        env:
+          GEMINI_API_KEY: ""   # sengaja kosong — bukti test gak butuh key asli
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/dist/$USECASE"
+          python -m pytest ${{ matrix.test }} -v --junitxml="$GITHUB_WORKSPACE/dist/$USECASE/test-report.xml"
+
+      - name: Package deliverables
+        run: |
+          OUT="dist/$USECASE"
+          cp "$USECASE/README.md" "$OUT/"
+          # case study / screenshot: taruh di $USECASE/deliverables/ -> ikut ke-backup otomatis
+          if [ -d "$USECASE/deliverables" ]; then cp -r "$USECASE/deliverables/." "$OUT/"; fi
+          {
+            echo "usecase:   $USECASE"
+            echo "commit:    $GITHUB_SHA"
+            echo "branch:    $GITHUB_REF_NAME"
+            echo "run:       $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+            echo "built_utc: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            echo "tests:     PASS"
+          } > "$OUT/MANIFEST.txt"
+          ls -la "$OUT"
+
+      - name: Keep package on GitHub (artifact, 30 hari)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.USECASE }}-deliverables
+          path: dist/${{ env.USECASE }}
+          retention-days: 30
+
+      - name: Upload to Google Drive (rclone)
+        if: env.RCLONE_CONF != '' && github.ref == 'refs/heads/main'
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq rclone
+          mkdir -p ~/.config/rclone
+          printf '%s\n' "$RCLONE_CONF" > ~/.config/rclone/rclone.conf
+          rclone copy "dist/$USECASE" "gdrive:$DRIVE_ROOT/$USECASE/latest" -v
+          rclone lsl "gdrive:$DRIVE_ROOT/$USECASE/latest"
+
+      - name: Drive skipped notice
+        if: env.RCLONE_CONF == ''
+        run: echo "::notice::RCLONE_CONF belum di-set — upload Drive di-skip. Package tetap ada di tab Artifacts."

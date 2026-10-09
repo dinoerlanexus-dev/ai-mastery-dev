@@ -1,0 +1,5 @@
+start,end,severity,description
+2026-08-03 02:10,2026-08-03 02:22,High,BGP flap Gi0/1 BR-JKT-03 (CRC/Layer1)
+2026-08-11 14:05,2026-08-11 14:09,Medium,OSPF adjacency drop core-01
+2026-08-18 09:14,2026-08-18 09:19,High,Interface flap + BGP hold expired BR-JKT-03
+2026-08-24 21:40,2026-08-24 21:47,Low,Latency spike WAN Surabaya
