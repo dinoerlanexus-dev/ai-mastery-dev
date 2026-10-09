@@ -23,6 +23,14 @@ import importlib
 import tempfile
 import streamlit as st
 
+# Streamlit Cloud: key disimpan di menu "Secrets" -> salin ke env var, karena kode usecase baca os.environ.
+# Di laptop (gak ada secrets.toml) blok ini dilewati, key tetap dari read -s / export.
+try:
+    if not os.environ.get("GEMINI_API_KEY") and "GEMINI_API_KEY" in st.secrets:
+        os.environ["GEMINI_API_KEY"] = st.secrets["GEMINI_API_KEY"]
+except Exception:
+    pass
+
 BASE = os.path.dirname(os.path.abspath(__file__))
 RCA_DIR = os.path.join(BASE, "01-network-rca")
 CR_DIR  = os.path.join(BASE, "02-config-review")

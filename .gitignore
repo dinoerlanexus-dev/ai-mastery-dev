@@ -3,10 +3,7 @@ venv/
 __pycache__/
 *.pyc
 .DS_Store
-chroma_db/
 .pytest_cache/
 dist/
 .streamlit/secrets.toml
-_archive/gemini-api-first-call.py
-_archive/gemini-api-first-call.py
 _archive/gemini-api-first-call.py
