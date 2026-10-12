@@ -132,6 +132,16 @@ div[class*="st-key-tile_"] div.element-container:has(button) { position:absolute
 div[class*="st-key-tile_"] div[data-testid="stElementContainer"]:has(button) *,
 div[class*="st-key-tile_"] div.element-container:has(button) * { width:100% !important; height:100% !important; }
 div[class*="st-key-tile_"] button { opacity:0 !important; cursor:pointer; }
+/* ===== KHUSUS HP (layar <= 640px): kartu ringkas, ikon di kiri, teks lebih besar, ada jarak antar kartu ===== */
+@media (max-width: 640px) {
+  .dn-card { min-height:auto !important; padding:16px !important; display:grid !important;
+             grid-template-columns:52px 1fr; column-gap:14px; row-gap:4px; }
+  .dn-card .dn-icon { width:52px !important; height:52px !important; grid-row:1 / span 3; }
+  .dn-card-title { font-size:20px !important; }
+  .dn-card-desc { font-size:15.5px !important; line-height:1.45; }
+  .dn-card-meta { margin-top:2px !important; font-size:12px !important; }
+  div[class*="st-key-tile_"] { margin-bottom:14px; }
+}
 div[data-testid="stMetricValue"] { font-family:'Sora', sans-serif; }
 </style>
 """, unsafe_allow_html=True)
