@@ -1,0 +1,239 @@
+{
+  "name": "NO - Jira AI RCA v1",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        0
+      ],
+      "id": "02bbb155-6132-4026-a57d-a9c4acf29a95",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "limit": 5,
+        "options": {
+          "jql": "project = NO AND labels = \"ai-rca\" ORDER BY created ASC"
+        }
+      },
+      "type": "n8n-nodes-base.jira",
+      "typeVersion": 1,
+      "position": [
+        224,
+        0
+      ],
+      "id": "de990237-d369-422b-87ba-0258567f793f",
+      "name": "Get many issues",
+      "credentials": {
+        "jiraSoftwareCloudApi": {
+          "id": "kwRLQAUYh0azzRwC",
+          "name": "Jira SW Cloud account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "eb069bca-faed-407f-94ed-414fc5fbc6c6",
+              "name": "ticket_key",
+              "value": "={{ $json.key }}",
+              "type": "string"
+            },
+            {
+              "id": "8b62caac-0b75-4f75-b6b7-5c674411d542",
+              "name": "summary",
+              "value": "={{ $json.fields.summary}}",
+              "type": "string"
+            },
+            {
+              "id": "b35726f5-8097-470b-8d07-5ab9564ce011",
+              "name": "description",
+              "value": "={{ $json.fields.description }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        448,
+        0
+      ],
+      "id": "08e07e57-3e57-430c-8423-f98aae0d1062",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-3.6-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-3.6-flash"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=ROLE: You are a senior network operations engineer at an Indonesian bank NOC.\n\nCONTEXT: Jira incident ticket\nTicket: {{ $json.ticket_key }}\nSummary: {{ $json.summary }}\nDescription: {{ $json.description }}\n\nTASK: Draft a root cause hypothesis for the on-duty NOC engineer.\n\nFORMAT: Plain text only, no markdown, max 200 words:\nAI RCA DRAFT - {{ $json.ticket_key }}\n1. Most likely root cause:\n2. Other possible causes:\n3. Business impact:\n4. Next verification steps:\n5. Confidence (Low/Medium/High) and why:\n\nCONSTRAINT: Use only information in the ticket. If data is missing, write \"Insufficient data\" and list what is needed. Do not invent device names, IP addresses, bug IDs, or regulation clauses. This is a draft for human review, not a final RCA."
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        672,
+        0
+      ],
+      "id": "69b3ee8a-262b-42a7-a6b9-403fb646b857",
+      "name": "Message a model",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "SdbJOZQooudycx3J",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "issueComment",
+        "issueKey": "={{ $('Edit Fields').item.json.ticket_key }}",
+        "comment": "={{ $json.content.parts[0].text }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.jira",
+      "typeVersion": 1,
+      "position": [
+        848,
+        256
+      ],
+      "id": "3e59cd8a-a0b3-46d8-befa-4f154d45f5e5",
+      "name": "Add a comment",
+      "credentials": {
+        "jiraSoftwareCloudApi": {
+          "id": "kwRLQAUYh0azzRwC",
+          "name": "Jira SW Cloud account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "issueKey": "={{ $('Edit Fields').item.json.ticket_key }}",
+        "updateFields": {
+          "labels": [
+            "ai-rca-done"
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.jira",
+      "typeVersion": 1,
+      "position": [
+        1072,
+        256
+      ],
+      "id": "13251529-c014-460a-867c-235d671e287c",
+      "name": "Update an issue",
+      "credentials": {
+        "jiraSoftwareCloudApi": {
+          "id": "kwRLQAUYh0azzRwC",
+          "name": "Jira SW Cloud account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get many issues",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many issues": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Add a comment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add a comment": {
+      "main": [
+        [
+          {
+            "node": "Update an issue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "timezone": "Asia/Jakarta",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "versionId": "7e7c88c4-cbb9-45ac-952e-85137aa5ce5b",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "9d942ef89d619b5f3f759f776c9b53e6088e677a1f856d9ba4c54ebdbc810d5c"
+  },
+  "nodeGroups": [],
+  "id": "Jfvw4FwwU0DL23VX",
+  "tags": []
+}
