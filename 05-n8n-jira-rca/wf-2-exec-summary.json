@@ -1,0 +1,283 @@
+{
+  "name": "NO - WF-2 Exec Summary",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        0
+      ],
+      "id": "98f6a5df-08e3-4592-b8db-11f528ce15e3",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "limit": 5,
+        "options": {
+          "jql": "project = NO AND labels = \"ai-rca-verified\" ORDER BY created ASC"
+        }
+      },
+      "type": "n8n-nodes-base.jira",
+      "typeVersion": 1,
+      "position": [
+        176,
+        0
+      ],
+      "id": "515e307d-9cbe-4b61-8f14-9f8950d05620",
+      "name": "Get many issues",
+      "credentials": {
+        "jiraSoftwareCloudApi": {
+          "id": "kwRLQAUYh0azzRwC",
+          "name": "Jira SW Cloud account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://dinoerla.atlassian.net/rest/api/2/issue/{{ $json.key }}/comment",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "jiraSoftwareCloudApi",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        352,
+        0
+      ],
+      "id": "3c426e4c-b1a1-46f6-9b5e-2f7cae200793",
+      "name": "Get Comments",
+      "credentials": {
+        "jiraSoftwareCloudApi": {
+          "id": "kwRLQAUYh0azzRwC",
+          "name": "Jira SW Cloud account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "26990f23-ac01-4a12-894c-3c207e361485",
+              "name": "ticket_key",
+              "value": "={{ $('Get many issues').item.json.key }}",
+              "type": "string"
+            },
+            {
+              "id": "cb85be4b-6780-459d-93b6-a3a553312134",
+              "name": "summary",
+              "value": "={{ $('Get many issues').item.json.fields.summary }}",
+              "type": "string"
+            },
+            {
+              "id": "903ff0da-35c2-4605-8161-25ada196f434",
+              "name": "description",
+              "value": "={{ $('Get many issues').item.json.fields.description.replace(/\\{\\{|\\}\\}/g, '') }}",
+              "type": "string"
+            },
+            {
+              "id": "f6e3ff69-dd9a-41b1-baf9-91f2d6135bcd",
+              "name": "comments_text",
+              "value": "={{ $json.comments.map(c => { const t = c.body.replace(/\\{quote\\}/g, '').replace(/^_|_$/g, '').trim(); const role = t.startsWith('AI RCA DRAFT') ? '[AI DRAFT]' : '[ENGINEER]'; return role + ' ' + c.created.slice(0,16).replace('T', ' ') + '\\n' + t; }).join('\\n\\n---\\n\\n') }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        528,
+        0
+      ],
+      "id": "82d82d2d-a91e-4afa-812c-3ac80690cad5",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-3.6-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-3.6-flash"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=ROLE: Anda adalah Head of Network Operations di sebuah bank di Indonesia, menulis laporan insiden untuk direksi.\n\nDATA TIKET\nTiket: {{ $json.ticket_key }}\nJudul: {{ $json.summary }}\nDeskripsi: {{ $json.description }}\n\nRIWAYAT ANALISA (urut waktu):\n{{ $json.comments_text }}\n\nATURAN:\n- Bagian bertanda [ENGINEER] adalah hasil verifikasi manusia dan BERLAKU MUTLAK. Jika berbeda dengan [AI DRAFT], gunakan versi [ENGINEER].\n- [AI DRAFT] hanya konteks pendukung.\n- Gunakan hanya fakta di atas. Jangan mengarang angka, nama perangkat, biaya, atau pasal regulasi.\n- Bahasa Indonesia formal, mudah dipahami non-teknis. Teks biasa tanpa markdown. Maksimal 150 kata.\n\nFORMAT:\nRINGKASAN EKSEKUTIF - FINAL - {{ $json.ticket_key }}\n1. Apa yang terjadi:\n2. Dampak bisnis:\n3. Akar masalah (terverifikasi):\n4. Status dan tindakan:\n5. Pencegahan ke depan:"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        704,
+        0
+      ],
+      "id": "ec90fdef-e882-4a26-a3c7-f6ba6a38b66e",
+      "name": "Message a model",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "SdbJOZQooudycx3J",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://dinoerla.atlassian.net/rest/api/2/issue/{{ $('Edit Fields').item.json.ticket_key }}/comment",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "jiraSoftwareCloudApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ body: $json.content.parts[0].text, properties: [ { key: \"sd.public.comment\", value: { internal: true } } ] }) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        992,
+        0
+      ],
+      "id": "60435176-1416-42e1-93c6-1b0e657151a3",
+      "name": "Add Final Note",
+      "credentials": {
+        "jiraSoftwareCloudApi": {
+          "id": "kwRLQAUYh0azzRwC",
+          "name": "Jira SW Cloud account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "issueKey": "={{ $('Edit Fields').item.json.ticket_key }}",
+        "updateFields": {
+          "labels": [
+            "ai-rca-final"
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.jira",
+      "typeVersion": 1,
+      "position": [
+        1216,
+        0
+      ],
+      "id": "146a748e-5883-44f0-8be5-ce1982047f8f",
+      "name": "Update an issue",
+      "credentials": {
+        "jiraSoftwareCloudApi": {
+          "id": "kwRLQAUYh0azzRwC",
+          "name": "Jira SW Cloud account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get many issues",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many issues": {
+      "main": [
+        [
+          {
+            "node": "Get Comments",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Comments": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Add Final Note",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add Final Note": {
+      "main": [
+        [
+          {
+            "node": "Update an issue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "timezone": "Asia/Jakarta",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false,
+    "errorWorkflow": "ETtnRcZTDR2guuIW"
+  },
+  "versionId": "abf94f28-658a-44b8-acc0-b3ce985ee4a5",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "9d942ef89d619b5f3f759f776c9b53e6088e677a1f856d9ba4c54ebdbc810d5c"
+  },
+  "nodeGroups": [],
+  "id": "LpLlbuUTBCSDitiz",
+  "tags": []
+}

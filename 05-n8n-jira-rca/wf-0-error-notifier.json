@@ -1,0 +1,68 @@
+{
+  "name": "NO - WF-0 Error Notifier",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "7f209907-b83e-4c34-abc8-46b76ca8a7f6",
+      "name": "Error Trigger"
+    },
+    {
+      "parameters": {
+        "fromEmail": "dinoerla.nexus@gmail.com",
+        "toEmail": "dinoerla.nexus@gmail.com",
+        "subject": "=\t[n8n ERROR] {{ $json.workflow.name }} — {{ $json.execution.lastNodeExecuted }}",
+        "emailFormat": "text",
+        "text": "=Workflow  : {{ $json.workflow.name }}\nNode gagal: {{ $json.execution.lastNodeExecuted }}\nError     : {{ $json.execution.error.message }}\nMode      : {{ $json.execution.mode }}\nWaktu     : {{ $now.setZone('Asia/Jakarta').toFormat('yyyy-LL-dd HH:mm') }} WIB\nDetail    : {{ $json.execution.url }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        224,
+        0
+      ],
+      "id": "9250c4db-1f0f-48a4-b006-58bf534456bb",
+      "name": "Send an Email",
+      "webhookId": "128d915f-799c-4d63-8702-01ee3534b0ff",
+      "credentials": {
+        "smtp": {
+          "id": "S7zla0eWkL6JbjaR",
+          "name": "SMTP account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Send an Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "63537b4c-5718-4e6d-9b8f-6cce1e881890",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "9d942ef89d619b5f3f759f776c9b53e6088e677a1f856d9ba4c54ebdbc810d5c"
+  },
+  "nodeGroups": [],
+  "id": "ETtnRcZTDR2guuIW",
+  "tags": []
+}
