@@ -1,36 +1,37 @@
-# 02 — Config Review (AI-assisted)
+# 02 — Config Review (AI-assisted, RAG-grounded)
 
-Fungsi: baca config device -> AI review vs best-practice + regulasi OJK -> report gap.
-REPORT-ONLY (tidak mengubah config).
+**A router configuration checked against security best practice and Indonesian banking regulation, ranked by severity.**
+Report only — it never changes a configuration.
 
-Dua versi:
-1. **config_review.py** — baseline. Best-practice keamanan + prinsip umum OJK/PBI,
-   TIDAK grounded ke teks regulasi asli. Klaim soal pasal spesifik selalu ditandai "(verify)".
-2. **config_review_rag.py** — versi RAG (grounded). Retrieve pasal OJK/SEOJK asli dari
-   ChromaDB shared di `04-ojk-rag` (280 chunk, TOP_K=4), kutip sumber per temuan lewat
-   field DASAR. Guard "(verify)" tetap dipakai buat temuan yang nggak didukung konteks
-   retrieved (murni best-practice umum).
+## Two versions
+| Script | Grounding | Use |
+|---|---|---|
+| `config_review.py` | None — best practice + general OJK/BI principles. Any specific article reference is marked "(verify)". | Baseline |
+| `config_review_rag.py` | **RAG**: retrieves the most relevant passages (top 4) from the real OJK/SEOJK documents in the shared ChromaDB of [`04-ojk-rag`](../04-ojk-rag/), and cites them per finding in a `DASAR` ("basis") field. Findings not supported by the retrieved text keep the "(verify)" flag. | Recommended |
 
-## Dependency (buat versi RAG)
-`config_review_rag.py` reuse ChromaDB dari `../04-ojk-rag/chroma_db` — TIDAK embed ulang.
-Kalau folder itu belum ke-ingest, jalanin dulu `ingest.py` di `04-ojk-rag`.
+The RAG version reuses `../04-ojk-rag/chroma_db` — it does not re-embed. If that database is missing,
+run `ingest.py` in `04-ojk-rag` first.
 
-## Cara jalanin
-1) Setup dulu dari folder induk (lihat README induk): activate venv + export key.
-2) Masuk folder ini & jalanin salah satu:
+## Run
+```bash
+cd 02-config-review
+python config_review_rag.py                          # default: data/router_sample.cfg
+python config_review_rag.py path/to/your_config.cfg  # mask real hostnames/IPs first
+python config_review.py                              # baseline, non-RAG
+```
 
-    cd 02-config-review
+## Files
+| File | Role |
+|---|---|
+| `config_review_rag.py` | RAG version — embed query → retrieve OJK passages → AI review with citations |
+| `config_review.py` + `prompts.py` | Baseline version and its prompt |
+| `data/router_sample.cfg` | Synthetic router config with deliberate gaps |
+| `test_config_review.py` | Smoke tests (mocked AI) |
 
-    # baseline (non-RAG)
-    python config_review.py                          # default: data/router_sample.cfg
-    python config_review.py config_review data/router_sample.cfg   # bentuk eksplisit
+## Screenshots (dashboard)
 
-    # RAG (grounded ke pasal OJK asli)
-    python config_review_rag.py                       # default: data/router_sample.cfg
-    python config_review_rag.py data/config_lo.cfg     # ganti input
+![Retrieved SEOJK clauses and review](../docs/images/dashboard-config-review.png)
+![Finding with severity, fix and regulation basis](../docs/images/dashboard-config-review-2.png)
+![Summary and priorities; unsupported findings marked (verify)](../docs/images/dashboard-config-review-3.png)
 
-## Isi folder
-- config_review.py     -> baseline, non-RAG.
-- config_review_rag.py -> versi RAG, grounded ke pasal OJK asli via ChromaDB shared.
-- prompts.py            -> prompt review buat versi baseline (best-practice + OJK umum, report-only, guard "(verify)").
-- data/                 -> config contoh: router_sample.cfg.
+Case study: [CS-102](../docs/case-studies/CS-102-v2-config-review-ojk-rag.md)

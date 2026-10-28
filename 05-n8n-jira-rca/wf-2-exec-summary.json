@@ -45,7 +45,7 @@
     },
     {
       "parameters": {
-        "url": "=https://dinoerla.atlassian.net/rest/api/2/issue/{{ $json.key }}/comment",
+        "url": "=https://YOUR-SITE.atlassian.net/rest/api/2/issue/{{ $json.key }}/comment",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "jiraSoftwareCloudApi",
         "options": {}
@@ -144,7 +144,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://dinoerla.atlassian.net/rest/api/2/issue/{{ $('Edit Fields').item.json.ticket_key }}/comment",
+        "url": "=https://YOUR-SITE.atlassian.net/rest/api/2/issue/{{ $('Edit Fields').item.json.ticket_key }}/comment",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "jiraSoftwareCloudApi",
         "sendBody": true,

@@ -14,8 +14,8 @@
     },
     {
       "parameters": {
-        "fromEmail": "dinoerla.nexus@gmail.com",
-        "toEmail": "dinoerla.nexus@gmail.com",
+        "fromEmail": "you@example.com",
+        "toEmail": "you@example.com",
         "subject": "=\t[n8n ERROR] {{ $json.workflow.name }} — {{ $json.execution.lastNodeExecuted }}",
         "emailFormat": "text",
         "text": "=Workflow  : {{ $json.workflow.name }}\nNode gagal: {{ $json.execution.lastNodeExecuted }}\nError     : {{ $json.execution.error.message }}\nMode      : {{ $json.execution.mode }}\nWaktu     : {{ $now.setZone('Asia/Jakarta').toFormat('yyyy-LL-dd HH:mm') }} WIB\nDetail    : {{ $json.execution.url }}",
